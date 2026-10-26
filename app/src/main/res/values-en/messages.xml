@@ -1,0 +1,31 @@
+<resources>
+    <string name="message_api_0">"The service is temporarily unavailable. Please try again later"</string>
+    <string name="message_api_1">"Too many attempts. Please wait a moment and try again"</string>
+    <string name="message_api_2">"This action is not available for your account"</string>
+    <string name="message_api_3">"Your name must be between 3 and 100 characters"</string>
+    <string name="message_api_4">"The address must not exceed 255 characters"</string>
+    <string name="message_api_5">"There are no changes to save"</string>
+    <string name="message_api_6">"Your cart must contain between 1 and 100 items"</string>
+    <string name="message_api_7">"Invalid item quantity"</string>
+    <string name="message_api_8">"Order notes must not exceed 500 characters"</string>
+    <string name="message_api_9">"The address must not exceed 300 characters"</string>
+    <string name="message_api_10">"Dish not found"</string>
+    <string name="message_api_11">"This order has already been canceled"</string>
+    <string name="message_api_12">"This order can no longer be canceled"</string>
+    <string name="message_api_13">"The order status has changed. Please try again"</string>
+    <string name="message_api_14">"This order cannot be canceled"</string>
+    <string name="message_api_15">"Check your phone number and password"</string>
+    <string name="message_api_16">"Check your name, phone number and password"</string>
+    <string name="message_api_17">"Check your profile details"</string>
+    <string name="message_api_18">"Incorrect phone number or password"</string>
+    <string name="message_api_19">"Could not create your account. Please try again later"</string>
+    <string name="message_api_20">"The server did not respond in time. Please try again"</string>
+    <string name="message_api_21">"This phone number is already registered. Sign in or reset your password"</string>
+    <string name="message_api_22">"The data has changed. Refresh this screen and try again"</string>
+    <string name="message_api_23">"Could not complete this action. Please try again later"</string>
+    <string name="message_api_24">"Check your order items and recipient details"</string>
+    <string name="message_api_25">"Could not place your order. Please try again later"</string>
+    <string name="message_api_26">"Could not cancel your order. Please try again later"</string>
+    <string name="message_joined_27">"Your password has been changed, but we could not complete sign-out. Try again to clear your session data."</string>
+    <string name="message_joined_28">"Could not update security. Please try again."</string>
+</resources>

@@ -1,0 +1,5 @@
+<resources>
+    <string name="language_title">Язык приложения</string>
+    <string name="language_russian" translatable="false">Русский</string>
+    <string name="language_english" translatable="false">English</string>
+</resources>

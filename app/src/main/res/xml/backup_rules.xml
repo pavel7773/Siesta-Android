@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<full-backup-content>
+
+    <!--
+        СИЕСТА: не включать DataStore
+        в резервные копии Android.
+    -->
+
+    <!--
+        Исключаем JWT, биометрическую сессию
+        и другие данные из DataStore.
+    -->
+    <exclude
+        domain="file"
+        path="datastore/" />
+
+</full-backup-content>

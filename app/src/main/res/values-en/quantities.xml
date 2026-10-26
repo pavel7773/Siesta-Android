@@ -1,0 +1,10 @@
+<resources>
+    <plurals name="dish_count">
+        <item quantity="one">%1$d dish</item>
+        <item quantity="other">%1$d dishes</item>
+    </plurals>
+    <plurals name="favorite_count">
+        <item quantity="one">%1$d saved dish</item>
+        <item quantity="other">%1$d saved dishes</item>
+    </plurals>
+</resources>

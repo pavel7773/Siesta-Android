@@ -1,0 +1,14 @@
+<resources>
+    <plurals name="dish_count">
+        <item quantity="one">%1$d блюдо</item>
+        <item quantity="few">%1$d блюда</item>
+        <item quantity="many">%1$d блюд</item>
+        <item quantity="other">%1$d блюда</item>
+    </plurals>
+    <plurals name="favorite_count">
+        <item quantity="one">%1$d сохранённое блюдо</item>
+        <item quantity="few">%1$d сохранённых блюда</item>
+        <item quantity="many">%1$d сохранённых блюд</item>
+        <item quantity="other">%1$d сохранённых блюда</item>
+    </plurals>
+</resources>

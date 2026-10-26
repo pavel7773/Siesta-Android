@@ -1,0 +1,31 @@
+<resources>
+    <string name="message_api_0">"Сервис временно недоступен. Попробуйте позже"</string>
+    <string name="message_api_1">"Слишком много попыток. Подождите немного и попробуйте снова"</string>
+    <string name="message_api_2">"Это действие недоступно для вашего аккаунта"</string>
+    <string name="message_api_3">"Имя должно содержать от 3 до 100 символов"</string>
+    <string name="message_api_4">"Адрес не должен превышать 255 символов"</string>
+    <string name="message_api_5">"Нет данных для изменения"</string>
+    <string name="message_api_6">"Корзина должна содержать от 1 до 100 позиций"</string>
+    <string name="message_api_7">"Некорректное количество блюда"</string>
+    <string name="message_api_8">"Комментарий не должен превышать 500 символов"</string>
+    <string name="message_api_9">"Адрес не должен превышать 300 символов"</string>
+    <string name="message_api_10">"Блюдо не найдено"</string>
+    <string name="message_api_11">"Заказ уже отменён"</string>
+    <string name="message_api_12">"Заказ уже нельзя отменить"</string>
+    <string name="message_api_13">"Статус заказа изменился. Повторите запрос"</string>
+    <string name="message_api_14">"Заказ нельзя отменить"</string>
+    <string name="message_api_15">"Проверьте номер телефона и пароль"</string>
+    <string name="message_api_16">"Проверьте имя, номер телефона и пароль"</string>
+    <string name="message_api_17">"Проверьте данные профиля"</string>
+    <string name="message_api_18">"Неверный телефон или пароль"</string>
+    <string name="message_api_19">"Не удалось зарегистрироваться. Попробуйте позже"</string>
+    <string name="message_api_20">"Сервер не ответил вовремя. Попробуйте ещё раз"</string>
+    <string name="message_api_21">"Этот номер уже зарегистрирован. Войдите или восстановите пароль"</string>
+    <string name="message_api_22">"Данные изменились. Обновите экран и попробуйте снова"</string>
+    <string name="message_api_23">"Не удалось выполнить действие. Попробуйте позже"</string>
+    <string name="message_api_24">"Проверьте состав заказа и данные получателя"</string>
+    <string name="message_api_25">"Не удалось оформить заказ. Попробуйте позже"</string>
+    <string name="message_api_26">"Не удалось отменить заказ. Попробуйте позже"</string>
+    <string name="message_joined_27">"Пароль изменён, но не удалось завершить выход. Повторите действие для очистки данных."</string>
+    <string name="message_joined_28">"Не удалось обновить защиту. Повторите попытку."</string>
+</resources>
