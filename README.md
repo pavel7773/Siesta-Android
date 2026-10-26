@@ -2,7 +2,7 @@
 
 **Клиент-серверное приложение для заказа еды.** Собственный проект Павла Колпакова, активно развивается и тестируется; не заявляется как опубликованный релиз.
 
-**Backend:** Kotlin / Ktor / PostgreSQL — отдельный публичный репозиторий будет опубликован вместе с проектом.
+**Backend:** [СИЕСТА — Kotlin / Ktor / PostgreSQL](https://github.com/pavel7773/Siesta-Backend)
 
 ## Возможности
 
@@ -84,4 +84,4 @@
 
 **Павел Колпаков** — Android / Kotlin-разработка, взаимодействие с backend и автоматизированное тестирование.
 
-Backend-часть проекта: Kotlin / Ktor / PostgreSQL.
+**Backend:** [СИЕСТА — Kotlin / Ktor / PostgreSQL](https://github.com/pavel7773/Siesta-Backend)
