@@ -6,10 +6,12 @@ import com.example.catering.data.mapper.UserMapper
 import com.example.catering.data.remote.dto.user.AuthResponse
 import com.example.catering.data.remote.dto.user.LoginRequest
 import com.example.catering.data.remote.dto.user.RegisterRequest
+import com.example.catering.data.remote.dto.user.RegistrationPendingResponse
 import com.example.catering.data.remote.dto.user.UpdateProfileRequest
 import com.example.catering.data.remote.dto.user.UserResponse
 import com.example.catering.data.remote.user.UserRemoteDataSource
 import com.example.catering.data.session.TokenProvider
+import com.example.catering.domain.model.RegistrationPending
 import com.example.catering.domain.model.User
 import com.example.catering.domain.model.UserException
 import io.mockk.coEvery
@@ -216,33 +218,100 @@ class UserRepositoryImplTest {
         }
 
     @Test
-    fun `register saves token in persistent storage and memory and returns mapped user`() =
+    fun `register returns pending verification and does not save token`() =
         runTest {
 
-            val userResponse = UserResponse(
-                id = 20,
-                name = "Иван",
-                phone = "79990000000",
-                address = ""
-            )
+            val response =
+                RegistrationPendingResponse(
+                    phone = "79990000000",
+                    codeSent = true
+                )
 
-            val authResponse = AuthResponse(
-                userResponse = userResponse,
-                token = "register-token-456"
-            )
+            val expected =
+                RegistrationPending(
+                    phone = "79990000000",
+                    codeSent = true
+                )
 
-            val expectedUser = User(
-                id = 20,
-                name = "Иван",
-                phone = "79990000000",
-                address = ""
-            )
-
-            val requestSlot = slot<RegisterRequest>()
+            val requestSlot =
+                slot<RegisterRequest>()
 
             coEvery {
                 userRemoteDataSource.registerUser(
                     capture(requestSlot)
+                )
+            } returns response
+
+            val result =
+                repository.registerUser(
+                    name = "Иван",
+                    phone = "79990000000",
+                    password = "password123"
+                )
+
+            assertEquals(
+                expected,
+                result
+            )
+
+            assertEquals(
+                "Иван",
+                requestSlot.captured.name
+            )
+
+            assertEquals(
+                "79990000000",
+                requestSlot.captured.phone
+            )
+
+            assertEquals(
+                "password123",
+                requestSlot.captured.password
+            )
+
+            coVerify(exactly = 0) {
+                tokenLocalDataSource.saveToken(any())
+            }
+
+            verify(exactly = 0) {
+                tokenProvider.setToken(any())
+            }
+
+            verify(exactly = 0) {
+                userMapper.toUser(any())
+            }
+        }
+
+    @Test
+    fun `verify phone saves token in persistent storage and memory and returns mapped user`() =
+        runTest {
+
+            val userResponse =
+                UserResponse(
+                    id = 20,
+                    name = "Иван",
+                    phone = "79990000000",
+                    address = ""
+                )
+
+            val authResponse =
+                AuthResponse(
+                    userResponse = userResponse,
+                    token = "register-token-456"
+                )
+
+            val expectedUser =
+                User(
+                    id = 20,
+                    name = "Иван",
+                    phone = "79990000000",
+                    address = ""
+                )
+
+            coEvery {
+                userRemoteDataSource.verifyRegistrationPhone(
+                    phone = "79990000000",
+                    code = "123456"
                 )
             } returns authResponse
 
@@ -262,31 +331,23 @@ class UserRepositoryImplTest {
                 userMapper.toUser(userResponse)
             } returns expectedUser
 
-            val result = repository.registerUser(
-                name = "Иван",
-                phone = "79990000000",
-                password = "password123"
-            )
+            val result =
+                repository.verifyRegistrationPhone(
+                    phone = "79990000000",
+                    code = "123456"
+                )
 
             assertEquals(
                 expectedUser,
                 result
             )
 
-            assertEquals(
-                "Иван",
-                requestSlot.captured.name
-            )
-
-            assertEquals(
-                "79990000000",
-                requestSlot.captured.phone
-            )
-
-            assertEquals(
-                "password123",
-                requestSlot.captured.password
-            )
+            coVerify(exactly = 1) {
+                userRemoteDataSource.verifyRegistrationPhone(
+                    phone = "79990000000",
+                    code = "123456"
+                )
+            }
 
             coVerify(exactly = 1) {
                 tokenLocalDataSource.saveToken(
@@ -298,6 +359,10 @@ class UserRepositoryImplTest {
                 tokenProvider.setToken(
                     "register-token-456"
                 )
+            }
+
+            verify(exactly = 1) {
+                userMapper.toUser(userResponse)
             }
         }
     @Test

@@ -1,5 +1,6 @@
 package com.example.catering.domain.usecase.user
 
+import com.example.catering.domain.model.RegistrationPending
 import com.example.catering.domain.model.User
 import com.example.catering.domain.repository.UserRepository
 import io.mockk.coEvery
@@ -130,10 +131,14 @@ class RegisterUserUseCaseTest {
     }
 
     @Test
-    fun `successful registration trims name and phone saves user and returns success`() =
+    fun `successful registration trims name and phone and returns verification required`() =
         runTest {
 
-            val user = createUser()
+            val pending =
+                RegistrationPending(
+                    phone = "79991234567",
+                    codeSent = true
+                )
 
             coEvery {
                 userRepository.registerUser(
@@ -141,21 +146,21 @@ class RegisterUserUseCaseTest {
                     phone = "79991234567",
                     password = "123456"
                 )
-            } returns user
+            } returns pending
 
-            coJustRun {
-                userRepository.saveUser(user)
-            }
-
-            val result = useCase.execute(
-                name = "  Павел  ",
-                phone = "  79991234567  ",
-                password = "123456",
-                passwordRepeat = "123456"
-            )
+            val result =
+                useCase.execute(
+                    name = "  Павел  ",
+                    phone = "  79991234567  ",
+                    password = "123456",
+                    passwordRepeat = "123456"
+                )
 
             assertEquals(
-                RegisterUserResult.Success(user),
+                RegisterUserResult.VerificationRequired(
+                    phone = "79991234567",
+                    codeSent = true
+                ),
                 result
             )
 
@@ -167,8 +172,8 @@ class RegisterUserUseCaseTest {
                 )
             }
 
-            coVerify(exactly = 1) {
-                userRepository.saveUser(user)
+            coVerify(exactly = 0) {
+                userRepository.saveUser(any())
             }
         }
 
