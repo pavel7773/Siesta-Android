@@ -18,7 +18,6 @@ import com.example.catering.ui.screens.HomeScreen
 @Composable
 fun HomeRoute(
     cartViewModel: CartViewModel,
-    userViewModel: UserViewModel,
     menuViewModel: MenuViewModel,
     onGoMenu: () -> Unit,
     onGoToCart: () -> Unit,
@@ -64,16 +63,15 @@ fun HomeRoute(
         onSearchQueryChange = menuViewModel::updateSearchQuery,
         categoryDishes = categoryDishes,
         onSearch = { menuViewModel.openFromHome(query = query); onGoMenu() },
-        onOpenFilters = { menuViewModel.openFromHome(query = query, openFilters = true); onGoMenu() },
+        onOpenFilters = {
+            menuViewModel.openFromHome(
+                query = query,
+                openFilters = true
+            ); onGoMenu()
+        },
         onCategoryClick = { category -> menuViewModel.openFromHome(category = category); onGoMenu() },
         onGoToCart = onGoToCart,
         badgeCartCount = totalItemsCount,
-        badgeCartText = if (totalItemsCount > 0) {
-            totalItemsCount.toString()
-        } else {
-            ""
-        },
-        currentUser = userViewModel.currentUser,
         onExitApp = onExitApp,
         onGoViewedDish = onGoViewedDish,
 

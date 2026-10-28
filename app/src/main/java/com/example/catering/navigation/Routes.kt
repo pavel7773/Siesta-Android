@@ -45,3 +45,9 @@ object Favorites: Route
 
 @Serializable
 object RecentlyViewed: Route
+
+@Serializable
+data class PhoneVerification(
+    val phone: String,
+    val codeSent: Boolean
+) : Route

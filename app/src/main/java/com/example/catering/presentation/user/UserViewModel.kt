@@ -15,18 +15,24 @@ import com.example.catering.domain.usecase.user.LoginUserResult
 import com.example.catering.domain.usecase.user.LoginUserUseCase
 import com.example.catering.domain.usecase.user.LogoutUserResult
 import com.example.catering.domain.usecase.user.LogoutUserUseCase
+import com.example.catering.domain.usecase.user.PhoneRegistrationUseCase
 import com.example.catering.domain.usecase.user.RegisterUserResult
 import com.example.catering.domain.usecase.user.RegisterUserUseCase
+import com.example.catering.domain.usecase.user.ResendPhoneCodeResult
 import com.example.catering.domain.usecase.user.RestoreSessionResult
 import com.example.catering.domain.usecase.user.RestoreSessionUseCase
 import com.example.catering.domain.usecase.user.UpdateUserAddressResult
 import com.example.catering.domain.usecase.user.UpdateUserAddressUseCase
 import com.example.catering.domain.usecase.user.UpdateUserNameResult
 import com.example.catering.domain.usecase.user.UpdateUserNameUseCase
+import com.example.catering.domain.usecase.user.VerifyPhoneResult
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import retrofit2.HttpException
 import java.io.IOException
@@ -56,6 +62,13 @@ sealed interface BiometricUnlockStatus {
     ) : BiometricUnlockStatus
 }
 
+data class PhoneVerificationState(
+    val phone: String = "",
+    val codeSent: Boolean = false,
+    val busy: Boolean = false,
+    val error: String? = null,
+    val resendSeconds: Int = 0
+)
 
 @HiltViewModel
 class UserViewModel @Inject constructor(
@@ -68,6 +81,7 @@ class UserViewModel @Inject constructor(
     private val changePasswordUseCase: ChangePasswordUseCase,
     private val biometricSessionManager: BiometricSessionManager,
     private val biometricSessionRestorer: BiometricSessionRestorer,
+    private val phoneRegistrationUseCase: PhoneRegistrationUseCase,
     private val tokenProvider: TokenProvider
 ) : ViewModel() {
 
@@ -82,6 +96,15 @@ class UserViewModel @Inject constructor(
     var isSessionRestoring by mutableStateOf(true)
         private set
 
+    private val _phoneVerificationState =
+        MutableStateFlow(
+            PhoneVerificationState()
+        )
+
+    val phoneVerificationState =
+        _phoneVerificationState.asStateFlow()
+
+    private var phoneResendJob: Job? = null
     private var restoreInProgress = false
     private val _profileActionStatus =
         MutableStateFlow<ProfileActionStatus?>(value = null)
@@ -147,7 +170,8 @@ class UserViewModel @Inject constructor(
         phone: String,
         password: String,
         passwordRepeat: String,
-        onSuccess: () -> Unit
+        onVerificationRequired:
+            (phone: String, codeSent: Boolean) -> Unit
     ) {
 
         if (
@@ -172,15 +196,16 @@ class UserViewModel @Inject constructor(
                     )
                 ) {
 
-                    is RegisterUserResult.Success -> {
+                    is RegisterUserResult.VerificationRequired -> {
 
-                        currentUser = result.user
+                        currentUser = null
+
                         _errorMessage.value = null
-                        passwordChangedAwaitingLogout = false
-                        _changePasswordStatus.value = ChangePasswordStatus.Idle
-                        isBiometricUnlockRequired = false
-                        _biometricUnlockStatus.value = BiometricUnlockStatus.Idle
-                        onSuccess()
+
+                        onVerificationRequired(
+                            result.phone,
+                            result.codeSent
+                        )
                     }
 
                     is RegisterUserResult.Error -> {
@@ -301,15 +326,17 @@ class UserViewModel @Inject constructor(
             isSessionRestoring = true
 
             try {
-                if (biometricSessionManager.isBiometricEnabled()) {
+                val biometricEnabled =
+                    biometricSessionManager.isBiometricEnabled()
 
-                    // Защищённую сессию нельзя восстановить
-                    // через обычный токен из DataStore.
+                isBiometricEnabled = biometricEnabled
+
+                if (biometricEnabled) {
+
                     tokenProvider.clearToken()
 
                     currentUser = null
                     isBiometricUnlockRequired = true
-
                     _biometricUnlockStatus.value =
                         BiometricUnlockStatus.Idle
 
@@ -389,13 +416,6 @@ class UserViewModel @Inject constructor(
     fun clearProfileActionStatus() {
         _profileActionStatus.value = null
     }
-
-    fun clearChangePasswordStatus() {
-        if (_changePasswordStatus.value is ChangePasswordStatus.Error) {
-            _changePasswordStatus.value = ChangePasswordStatus.Idle
-        }
-    }
-
     fun changePassword(
         currentPassword: String,
         newPassword: String,
@@ -695,6 +715,203 @@ class UserViewModel @Inject constructor(
             }
         }
     }
+    suspend fun shouldOfferBiometricEnable(): Boolean {
+        if (
+            currentUser == null ||
+            isBiometricUnlockRequired ||
+            isSessionRestoring ||
+            isLoggingOut
+        ) {
+            return false
+        }
 
+        if (biometricSessionManager.isBiometricEnabled()) {
+            return false
+        }
 
+        return !biometricSessionManager
+            .isEnableOfferDismissed()
+    }
+
+    fun dismissBiometricEnableOffer() {
+        viewModelScope.launch {
+            biometricSessionManager
+                .dismissEnableOffer()
+        }
+    }
+    fun beginPhoneVerification(
+        phone: String,
+        codeSent: Boolean
+    ) {
+        phoneResendJob?.cancel()
+
+        _phoneVerificationState.value =
+            PhoneVerificationState(
+                phone = phone,
+                codeSent = codeSent,
+                resendSeconds =
+                    if (codeSent) 60 else 0
+            )
+
+        if (codeSent) {
+            startPhoneResendCooldown()
+        }
+    }
+
+    fun verifyRegistrationPhone(
+        code: String,
+        onSuccess: () -> Unit
+    ) {
+        val state =
+            _phoneVerificationState.value
+
+        if (
+            state.busy ||
+            state.phone.isBlank()
+        ) {
+            return
+        }
+
+        _phoneVerificationState.update {
+            it.copy(
+                busy = true,
+                error = null
+            )
+        }
+
+        viewModelScope.launch {
+
+            try {
+                when (
+                    val result =
+                        phoneRegistrationUseCase.verify(
+                            phone = state.phone,
+                            code = code
+                        )
+                ) {
+
+                    is VerifyPhoneResult.Success -> {
+
+                        currentUser = result.user
+
+                        _errorMessage.value = null
+
+                        passwordChangedAwaitingLogout =
+                            false
+
+                        _changePasswordStatus.value =
+                            ChangePasswordStatus.Idle
+
+                        isBiometricUnlockRequired =
+                            false
+
+                        _biometricUnlockStatus.value =
+                            BiometricUnlockStatus.Idle
+
+                        onSuccess()
+                    }
+
+                    is VerifyPhoneResult.Error -> {
+                        _phoneVerificationState.update {
+                            it.copy(
+                                error = result.message
+                            )
+                        }
+                    }
+                }
+
+            } finally {
+                _phoneVerificationState.update {
+                    it.copy(busy = false)
+                }
+            }
+        }
+    }
+
+    fun resendRegistrationPhoneCode() {
+
+        val state =
+            _phoneVerificationState.value
+
+        if (
+            state.busy ||
+            state.phone.isBlank() ||
+            state.resendSeconds > 0
+        ) {
+            return
+        }
+
+        _phoneVerificationState.update {
+            it.copy(
+                busy = true,
+                error = null
+            )
+        }
+
+        viewModelScope.launch {
+
+            try {
+                when (
+                    val result =
+                        phoneRegistrationUseCase
+                            .resend(state.phone)
+                ) {
+
+                    ResendPhoneCodeResult.Success -> {
+
+                        _phoneVerificationState.update {
+                            it.copy(
+                                codeSent = true
+                            )
+                        }
+
+                        startPhoneResendCooldown()
+                    }
+
+                    is ResendPhoneCodeResult.Error -> {
+
+                        _phoneVerificationState.update {
+                            it.copy(
+                                error = result.message
+                            )
+                        }
+                    }
+                }
+
+            } finally {
+                _phoneVerificationState.update {
+                    it.copy(busy = false)
+                }
+            }
+        }
+    }
+
+    private fun startPhoneResendCooldown() {
+
+        phoneResendJob?.cancel()
+
+        _phoneVerificationState.update {
+            it.copy(resendSeconds = 60)
+        }
+
+        phoneResendJob =
+            viewModelScope.launch {
+
+                while (
+                    _phoneVerificationState
+                        .value
+                        .resendSeconds > 0
+                ) {
+                    delay(1000)
+
+                    _phoneVerificationState.update {
+                        it.copy(
+                            resendSeconds =
+                                (it.resendSeconds - 1)
+                                    .coerceAtLeast(0)
+                        )
+                    }
+                }
+            }
+    }
 }

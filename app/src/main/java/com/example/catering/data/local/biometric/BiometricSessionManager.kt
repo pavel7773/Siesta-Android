@@ -25,13 +25,31 @@ class BiometricSessionManager @Inject constructor(
 
     // Первоначальное включение защиты V1.
     fun prepareEnableCipher(): Cipher {
-        return cryptoManager.createEncryptionCipher()
+        return if (
+            Build.VERSION.SDK_INT >= Build.VERSION_CODES.R
+        ) {
+            cryptoManager.createCredentialEncryptionCipher()
+        } else {
+            cryptoManager.createEncryptionCipher()
+        }
     }
 
     suspend fun completeEnable(
         authenticatedCipher: Cipher
     ) {
-        tokenStore.enableBiometric(authenticatedCipher)
+        val keyVersion =
+            if (
+                Build.VERSION.SDK_INT >= Build.VERSION_CODES.R
+            ) {
+                2
+            } else {
+                1
+            }
+
+        tokenStore.enableBiometric(
+            authenticatedCipher = authenticatedCipher,
+            keyVersion = keyVersion
+        )
     }
 
     // Подготовка разблокировки с учётом версии ключа.
@@ -111,5 +129,12 @@ class BiometricSessionManager @Inject constructor(
             authenticatedCipher = authenticatedCipher,
             verifiedToken = token
         )
+    }
+    suspend fun isEnableOfferDismissed(): Boolean {
+        return tokenStore.isEnableOfferDismissed()
+    }
+
+    suspend fun dismissEnableOffer() {
+        tokenStore.dismissEnableOffer()
     }
 }

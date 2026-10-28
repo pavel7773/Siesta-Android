@@ -5,12 +5,17 @@ import com.example.catering.domain.model.UserException
 import com.example.catering.domain.repository.UserRepository
 import javax.inject.Inject
 import kotlin.coroutines.cancellation.CancellationException
-
 sealed interface RegisterUserResult {
-    data class Success(val user: User) : RegisterUserResult
-    data class Error(val message: String) : RegisterUserResult
-}
 
+    data class VerificationRequired(
+        val phone: String,
+        val codeSent: Boolean
+    ) : RegisterUserResult
+
+    data class Error(
+        val message: String
+    ) : RegisterUserResult
+}
 class RegisterUserUseCase @Inject constructor(
     private val userRepository: UserRepository
 ) {
@@ -37,15 +42,17 @@ class RegisterUserUseCase @Inject constructor(
 
         return try {
 
-            val newUser = userRepository.registerUser(
-                name = cleanName,
-                phone = cleanPhone,
-                password = password
+            val pending =
+                userRepository.registerUser(
+                    name = cleanName,
+                    phone = cleanPhone,
+                    password = password
+                )
+
+            RegisterUserResult.VerificationRequired(
+                phone = pending.phone,
+                codeSent = pending.codeSent
             )
-
-            userRepository.saveUser(newUser)
-
-            RegisterUserResult.Success(newUser)
 
         } catch (e: CancellationException) {
 

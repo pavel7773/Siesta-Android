@@ -101,7 +101,7 @@ fun FavoriteScreen(
             onBack = onBack,
             compact = true,
             centerTitle = false,
-            titleFontSize = 18.sp,
+            titleFontSize = 24.sp,
             trailing = if (onGoCart != null) {
                 {
                     SiestaCartButton(badgeCartCount, onGoCart)

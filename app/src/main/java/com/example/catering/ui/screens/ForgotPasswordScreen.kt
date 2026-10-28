@@ -103,7 +103,7 @@ fun ForgotPasswordScreen(
             title = texts.getString(R.string.ui_reset_password_286),
             onBack = onBack,
             compact = true,
-            titleFontSize = 19.sp,
+            titleFontSize = 24.sp,
             modifier = Modifier.padding(
                 horizontal = 18.dp,
                 vertical = 8.dp

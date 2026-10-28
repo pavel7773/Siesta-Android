@@ -1,7 +1,6 @@
 package com.example.catering.ui.screens
 
 
-
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.heightIn
@@ -137,8 +136,6 @@ private val SiestaManrope = FontFamily(
 fun HomeScreen(
     onGoToCart: () -> Unit,
     badgeCartCount: Int,
-    badgeCartText: String,
-    currentUser: User?,
     onExitApp: () -> Unit,
     onGoViewedDish: () -> Unit,
     searchQuery: String,
@@ -153,10 +150,13 @@ fun HomeScreen(
 ) {
     val texts = androidx.compose.ui.platform.LocalContext.current.resources
 
+    var showMoreCategories by rememberSaveable {
+        mutableStateOf(false)
+    }
+
     var showDialog by remember { mutableStateOf(false) }
     val focusManager = LocalFocusManager.current
     val submitSearch = { focusManager.clearFocus(); onSearch() }
-    val fontScale = LocalDensity.current.fontScale.coerceIn(1f, 1.6f)
 
     LazyColumn(
         modifier = Modifier
@@ -208,7 +208,7 @@ fun HomeScreen(
                 SiestaCartButton(
                     badgeCartCount = badgeCartCount,
                     onClick = onGoToCart,
-                    modifier = Modifier
+                    modifier = Modifier.padding(top = 6.dp)
                 )
             }
         }
@@ -217,7 +217,7 @@ fun HomeScreen(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height((280 * fontScale).dp)
+                    .height(280.dp)
             ) {
                 // Фотография пасты с плавным растворением
                 Image(
@@ -330,7 +330,7 @@ fun HomeScreen(
                     modifier = Modifier
                         .align(Alignment.BottomCenter)
                         .fillMaxWidth()
-                        .height((48 * fontScale).dp)
+                        .height(48.dp)
                         .background(
                             brush = Brush.horizontalGradient(
                                 colors = listOf(
@@ -359,7 +359,11 @@ fun HomeScreen(
                             imageVector = Icons.Default.Search,
                             contentDescription = texts.getString(R.string.ui_search_dishes_301),
                             tint = MaterialTheme.colorScheme.onBackground,
-                            modifier = Modifier.size(40.dp).clip(CircleShape).clickable(role = Role.Button, onClick = submitSearch).padding(9.dp)
+                            modifier = Modifier
+                                .size(40.dp)
+                                .clip(CircleShape)
+                                .clickable(role = Role.Button, onClick = submitSearch)
+                                .padding(9.dp)
                         )
 
                         Spacer(modifier = Modifier.width(12.dp))
@@ -367,10 +371,18 @@ fun HomeScreen(
                         BasicTextField(
                             value = searchQuery,
                             onValueChange = onSearchQueryChange,
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text, imeAction = ImeAction.Search),
+                            keyboardOptions = KeyboardOptions(
+                                keyboardType = KeyboardType.Text,
+                                imeAction = ImeAction.Search
+                            ),
                             keyboardActions = KeyboardActions(onSearch = { submitSearch() }),
                             singleLine = true,
-                            modifier = Modifier.weight(1f).semantics { contentDescription = texts.getString(R.string.ui_search_your_favorite_dishes_302) },
+                            modifier = Modifier
+                                .weight(1f)
+                                .semantics {
+                                    contentDescription =
+                                        texts.getString(R.string.ui_search_your_favorite_dishes_302)
+                                },
                             textStyle = TextStyle(
                                 fontFamily = SiestaManrope,
                                 fontSize = 14.sp,
@@ -403,7 +415,10 @@ fun HomeScreen(
                             .size(46.dp)
                             .clip(CircleShape)
                             .clickable(role = Role.Button) { focusManager.clearFocus(); onOpenFilters() }
-                            .semantics { contentDescription = texts.getString(R.string.ui_filters_and_categories_303) }
+                            .semantics {
+                                contentDescription =
+                                    texts.getString(R.string.ui_filters_and_categories_303)
+                            }
                             .background(
                                 color = Color(0xFF24343E).copy(alpha = 0.85f),
                                 shape = CircleShape
@@ -445,44 +460,102 @@ fun HomeScreen(
 
         // Categories come from the real menu, not from decorative hard-coded labels.
         item {
-            LazyRow(Modifier.fillMaxWidth().padding(top = 18.dp, bottom = 12.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                categoryDishes.take(5).forEach { dish ->
+            LazyRow(
+                Modifier
+                    .fillMaxWidth()
+                    .padding(top = 18.dp, bottom = 12.dp),
+                horizontalArrangement = Arrangement.spacedBy(5.dp)
+            ) {
+                categoryDishes
+                    .take(if (showMoreCategories) categoryDishes.size else 4)
+                    .forEach { dish ->
                     item(key = dish.category) {
                         val context = LocalContext.current
                         val model = remember(dish.imageUrl, context) {
                             if (dish.imageUrl.startsWith("siesta_")) context.resources.getIdentifier(
-                                dish.imageUrl, "drawable", context.packageName).takeIf { it != 0 }
+                                dish.imageUrl, "drawable", context.packageName
+                            ).takeIf { it != 0 }
                             else dish.imageUrl.takeIf { it.isNotBlank() }
                         }
-                        Column(Modifier.width(76.dp).clip(RoundedCornerShape(12.dp))
-                            .clickable(role = Role.Button) { focusManager.clearFocus(); onCategoryClick(dish.category) }
-                            .padding(vertical = 4.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                            SubcomposeAsyncImage(model = model, contentDescription = null,
+                        Column(
+                            Modifier
+                                .width(70.dp)
+                                .clip(RoundedCornerShape(12.dp))
+                                .clickable(role = Role.Button) {
+                                    focusManager.clearFocus(); onCategoryClick(
+                                    dish.category
+                                )
+                                }
+                                .padding(vertical = 4.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally) {
+                            SubcomposeAsyncImage(
+                                model = model, contentDescription = null,
                                 contentScale = ContentScale.Crop,
-                                modifier = Modifier.size(60.dp).clip(CircleShape).border(1.dp, SiestaNavOutline, CircleShape),
-                                loading = { Box(Modifier.fillMaxSize().background(SiestaSearchMiddle)) },
-                                error = { Box(Modifier.fillMaxSize().background(SiestaSearchMiddle), contentAlignment = Alignment.Center) {
-                                    Text(dish.category.take(1), color = SiestaAmber)
-                                } })
+                                modifier = Modifier
+                                    .size(60.dp)
+                                    .clip(CircleShape)
+                                    .border(1.dp, SiestaNavOutline, CircleShape),
+                                loading = {
+                                    Box(
+                                        Modifier
+                                            .fillMaxSize()
+                                            .background(SiestaSearchMiddle)
+                                    )
+                                },
+                                error = {
+                                    Box(
+                                        Modifier
+                                            .fillMaxSize()
+                                            .background(SiestaSearchMiddle),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Text(dish.category.take(1), color = SiestaAmber)
+                                    }
+                                })
                             Spacer(Modifier.height(8.dp))
-                            Text(if (dish.category == "Морепродукты") texts.getString(R.string.ui_seafood_304) else dish.category,
-                                fontFamily = SiestaManrope, fontSize = 12.sp,
-                                color = MaterialTheme.colorScheme.onBackground, textAlign = TextAlign.Center)
+                            Text(
+                                if (dish.category == "Морепродукты") texts.getString(R.string.ui_seafood_304) else dish.category,
+                                fontFamily = SiestaManrope,
+                                fontSize = 12.sp,
+                                color = MaterialTheme.colorScheme.onBackground,
+                                textAlign = TextAlign.Center
+                            )
                         }
                     }
                 }
-                item(key = "all-categories") {
-                    Column(Modifier.width(76.dp).clip(RoundedCornerShape(12.dp))
-                        .clickable(role = Role.Button) { focusManager.clearFocus(); onOpenFilters() }
-                        .padding(vertical = 4.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                        Box(Modifier.size(60.dp).background(SiestaSearchMiddle, CircleShape)
-                            .border(1.dp, SiestaNavOutline, CircleShape), contentAlignment = Alignment.Center) {
-                            Text("•••", fontSize = 20.sp, color = MaterialTheme.colorScheme.onBackground)
+                if (!showMoreCategories && categoryDishes.size > 4) {
+                    item(key = "all-categories") {
+                        Column(
+                            Modifier
+                                .width(76.dp)
+                                .clip(RoundedCornerShape(12.dp))
+                                .clickable(role = Role.Button) {
+                                    focusManager.clearFocus()
+                                    showMoreCategories = true
+                                }
+                                .padding(vertical = 4.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally) {
+                            Box(
+                                Modifier
+                                    .size(60.dp)
+                                    .background(SiestaSearchMiddle, CircleShape)
+                                    .border(1.dp, SiestaNavOutline, CircleShape),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    "•••",
+                                    fontSize = 20.sp,
+                                    color = MaterialTheme.colorScheme.onBackground
+                                )
+                            }
+                            Spacer(Modifier.height(8.dp))
+                            Text(
+                                texts.getString(R.string.ui_more_305),
+                                fontFamily = SiestaManrope,
+                                fontSize = 12.sp,
+                                color = MaterialTheme.colorScheme.onBackground
+                            )
                         }
-                        Spacer(Modifier.height(8.dp))
-                        Text(texts.getString(R.string.ui_more_305), fontFamily = SiestaManrope, fontSize = 12.sp,
-                            color = MaterialTheme.colorScheme.onBackground)
                     }
                 }
             }
@@ -519,10 +592,13 @@ fun HomeScreen(
                     Spacer(modifier = Modifier.height(12.dp))
 
                     BoxWithConstraints(Modifier.fillMaxWidth()) {
-                        val columns = if (maxWidth < 360.dp || fontScale > 1.3f) 1 else 2
+                        val columns = if (maxWidth < 360.dp) 1 else 2
                         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                             recentlyViewedDishes.take(2).chunked(columns).forEach { rowDishes ->
-                                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                                Row(
+                                    Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                                ) {
                                     rowDishes.forEach { dish ->
                                         val context = LocalContext.current
 
@@ -604,7 +680,11 @@ fun HomeScreen(
                                                         )
 
                                                         SiestaAddToCartButton(
-                                                            onClick = { onAddRecentlyViewedToCart(dish) },
+                                                            onClick = {
+                                                                onAddRecentlyViewedToCart(
+                                                                    dish
+                                                                )
+                                                            },
                                                             modifier = Modifier.offset(
                                                                 x = 4.dp,
                                                                 y = 5.dp
@@ -649,7 +729,6 @@ fun HomeScreen(
         )
     }
 }
-
 
 
 @Composable
@@ -805,7 +884,7 @@ fun CartItemRow(
 
                 // Сердечко пока визуальное
                 IconButton(
-                    onClick =  onToggleFavorite ,
+                    onClick = onToggleFavorite,
                     modifier = Modifier
                         .align(Alignment.TopEnd)
                         .padding(8.dp)
@@ -826,7 +905,10 @@ fun CartItemRow(
                             Icons.Outlined.FavoriteBorder
                         },
                         contentDescription = if (isFavorite) {
-                            texts.getString(R.string.ui_remove_from_favorites_315, cartItem.dish.name)
+                            texts.getString(
+                                R.string.ui_remove_from_favorites_315,
+                                cartItem.dish.name
+                            )
                         } else {
                             texts.getString(R.string.ui_add_to_favorites_316, cartItem.dish.name)
                         },
@@ -863,7 +945,8 @@ fun CartItemRow(
             Spacer(modifier = Modifier.height(12.dp))
 
             Row(
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier
+                    .fillMaxWidth()
                     .offset(x = 12.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.Bottom
@@ -930,7 +1013,10 @@ fun CartItemRow(
                     ) {
                         Icon(
                             imageVector = Icons.Outlined.Delete,
-                            contentDescription = texts.getString(R.string.ui_remove_317, cartItem.dish.name),
+                            contentDescription = texts.getString(
+                                R.string.ui_remove_317,
+                                cartItem.dish.name
+                            ),
                             tint = SiestaNavUnselected,
                             modifier = Modifier.size(22.dp)
                         )

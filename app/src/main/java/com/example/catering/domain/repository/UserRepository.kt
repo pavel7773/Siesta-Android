@@ -1,6 +1,7 @@
 
 package com.example.catering.domain.repository
 
+import com.example.catering.domain.model.RegistrationPending
 import com.example.catering.domain.model.User
 
 interface UserRepository {
@@ -19,7 +20,16 @@ interface UserRepository {
         name: String,
         phone: String,
         password: String
+    ): RegistrationPending
+
+    suspend fun verifyRegistrationPhone(
+        phone: String,
+        code: String
     ): User
+
+    suspend fun resendRegistrationPhoneCode(
+        phone: String
+    )
 
     suspend fun clearToken()
 

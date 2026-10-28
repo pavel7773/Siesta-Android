@@ -5,8 +5,11 @@ import com.example.catering.data.remote.dto.password.ChangePasswordRequest
 import com.example.catering.data.remote.dto.user.AuthResponse
 import com.example.catering.data.remote.dto.user.LoginRequest
 import com.example.catering.data.remote.dto.user.RegisterRequest
+import com.example.catering.data.remote.dto.user.RegistrationPendingResponse
+import com.example.catering.data.remote.dto.user.ResendPhoneCodeRequest
 import com.example.catering.data.remote.dto.user.UpdateProfileRequest
 import com.example.catering.data.remote.dto.user.UserResponse
+import com.example.catering.data.remote.dto.user.VerifyPhoneRequest
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.GET
@@ -21,7 +24,17 @@ interface UserApi {
     @POST("auth/register")
     suspend fun registerUser(
         @Body registerRequest: RegisterRequest
+    ): RegistrationPendingResponse
+
+    @POST("auth/register/verify-phone")
+    suspend fun verifyRegistrationPhone(
+        @Body request: VerifyPhoneRequest
     ): AuthResponse
+
+    @POST("auth/register/resend-code")
+    suspend fun resendRegistrationPhoneCode(
+        @Body request: ResendPhoneCodeRequest
+    ): Response<Unit>
 
     @POST("auth/login")
     suspend fun loginUser(
@@ -68,4 +81,5 @@ interface UserApi {
     suspend fun resetPassword(
         @Body request: Map<String, String>
     ): Response<Unit>
+
 }

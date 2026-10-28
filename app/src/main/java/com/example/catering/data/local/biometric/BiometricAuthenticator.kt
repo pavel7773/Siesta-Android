@@ -119,12 +119,6 @@ class BiometricAuthenticator(
                         }
                     }
                 }
-
-                override fun onAuthenticationFailed() {
-                    super.onAuthenticationFailed()
-                    // Неверный отпечаток:
-                    // Android позволяет повторить попытку.
-                }
             }
         )
 

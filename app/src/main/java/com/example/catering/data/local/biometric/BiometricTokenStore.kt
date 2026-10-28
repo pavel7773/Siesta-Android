@@ -2,6 +2,7 @@ package com.example.catering.data.local.biometric
 
 import android.content.Context
 import android.util.Base64
+import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
@@ -28,6 +29,11 @@ class BiometricTokenStore @Inject constructor(
         private val TOKEN_KEY_VERSION =
             intPreferencesKey("siesta_biometric_key_version")
 
+        private val ENABLE_OFFER_DISMISSED =
+            booleanPreferencesKey(
+                "siesta_biometric_enable_offer_dismissed"
+            )
+
         private const val LEGACY_VERSION = 1
         private const val CREDENTIAL_VERSION = 2
     }
@@ -46,7 +52,8 @@ class BiometricTokenStore @Inject constructor(
     // Вызывать только с Cipher после
     // успешного BiometricPrompt.
     suspend fun enableBiometric(
-        authenticatedCipher: Cipher
+        authenticatedCipher: Cipher,
+        keyVersion: Int
     ) {
         val token = tokenStorage.readToken()
             ?: error("Нет активного токена авторизации")
@@ -81,8 +88,15 @@ class BiometricTokenStore @Inject constructor(
                     Base64.NO_WRAP
                 )
 
+            check(
+                keyVersion == LEGACY_VERSION ||
+                        keyVersion == CREDENTIAL_VERSION
+            ) {
+                "Неизвестная версия биометрического ключа"
+            }
+
             preferences[TOKEN_KEY_VERSION] =
-                LEGACY_VERSION
+                keyVersion
         }
 
         // Биометрическая копия успешно создана.
@@ -223,5 +237,17 @@ class BiometricTokenStore @Inject constructor(
 
         return version
     }
+    suspend fun isEnableOfferDismissed(): Boolean {
+        val preferences =
+            context.tokenDataStore.data.first()
 
+        return preferences[ENABLE_OFFER_DISMISSED]
+            ?: false
+    }
+
+    suspend fun dismissEnableOffer() {
+        context.tokenDataStore.edit { preferences ->
+            preferences[ENABLE_OFFER_DISMISSED] = true
+        }
+    }
 }

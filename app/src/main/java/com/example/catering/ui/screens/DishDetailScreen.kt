@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -71,6 +72,7 @@ import com.example.catering.ui.theme.SiestaNavOutline
 import com.example.catering.ui.theme.SiestaNavUnselected
 import com.example.catering.ui.theme.SiestaTextPrimary
 import kotlinx.coroutines.launch
+import java.util.Locale
 
 @Composable
 fun DishDetailScreen(
@@ -99,6 +101,7 @@ fun DishDetailScreen(
 
     Scaffold(
         containerColor = SiestaBgTop,
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
         snackbarHost = { SnackbarHost(snackbarHostState) },
         bottomBar = {
             if (dish != null) {
@@ -142,32 +145,23 @@ fun DishDetailScreen(
             Spacer(modifier = Modifier.height(6.dp))
 
             // Верхняя строка: назад + корзина
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .heightIn(min = 52.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
 
-                Row(
-                    modifier = Modifier.weight(1f),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    ScreenHeader(
-                        title = texts.getString(R.string.ui_dish_details_235),
-                        compact = true,
-                        onBack = onBack,
-                        trailing = {
-                            SiestaCartButton(
-                                badgeCartCount = badgeCartCount,
-                                onClick = onGoToCart
-                            )
-                        }
+            ScreenHeader(
+                title = texts.getString(
+                    R.string.ui_dish_details_235
+                ),
+                titleFontSize = 24.sp,
+                compact = true,
+                onBack = onBack,
+                trailing = {
+                    SiestaCartButton(
+                        badgeCartCount = badgeCartCount,
+                        onClick = onGoToCart
                     )
                 }
-            }
+            )
 
-            Spacer(modifier = Modifier.height(18.dp))
+            Spacer(modifier = Modifier.height(30.dp))
 
             if (dish == null) {
                 ErrorStateContent(
@@ -196,7 +190,7 @@ fun DishDetailScreen(
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(200.dp)
+                        .height(190.dp)
                         .clip(RoundedCornerShape(22.dp))
                         .background(SiestaCardMiddle)
                         .border(
@@ -264,7 +258,7 @@ fun DishDetailScreen(
                     }
                 }
 
-                Spacer(modifier = Modifier.height(14.dp))
+                Spacer(modifier = Modifier.height(20.dp))
 
                 // Инфо-блок
                 Column(
@@ -362,17 +356,17 @@ fun DishDetailScreen(
                         ) {
                             SiestaCompactNutritionItem(
                                 label = texts.getString(R.string.ui_protein_243),
-                                value = texts.getString(R.string.ui_g_244, dish.proteins),
+                                value = "${formatNutrition(dish.proteins)} г",
                                 modifier = Modifier.weight(1f)
                             )
                             SiestaCompactNutritionItem(
                                 label = texts.getString(R.string.ui_fat_245),
-                                value = texts.getString(R.string.ui_g_246, dish.fats),
+                                value = "${formatNutrition(dish.fats)} г",
                                 modifier = Modifier.weight(1f)
                             )
                             SiestaCompactNutritionItem(
                                 label = texts.getString(R.string.ui_carbs_247),
-                                value = texts.getString(R.string.ui_g_248, dish.carbs),
+                                value = "${formatNutrition(dish.carbs)} г",
                                 modifier = Modifier.weight(1f)
                             )
                         }
@@ -475,5 +469,17 @@ private fun SiestaBottomActionButton(
                 modifier = Modifier.size(18.dp)
             )
         }
+    }
+
+}
+private fun formatNutrition(value: Double): String {
+    return if (value % 1.0 == 0.0) {
+        value.toInt().toString()
+    } else {
+        String.format(
+            Locale.getDefault(),
+            "%.1f",
+            value
+        )
     }
 }

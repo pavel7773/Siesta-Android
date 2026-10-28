@@ -5,8 +5,11 @@ import com.example.catering.data.remote.dto.password.ChangePasswordRequest
 import com.example.catering.data.remote.dto.user.AuthResponse
 import com.example.catering.data.remote.dto.user.LoginRequest
 import com.example.catering.data.remote.dto.user.RegisterRequest
+import com.example.catering.data.remote.dto.user.RegistrationPendingResponse
+import com.example.catering.data.remote.dto.user.ResendPhoneCodeRequest
 import com.example.catering.data.remote.dto.user.UpdateProfileRequest
 import com.example.catering.data.remote.dto.user.UserResponse
+import com.example.catering.data.remote.dto.user.VerifyPhoneRequest
 import retrofit2.HttpException
 import retrofit2.Response
 import javax.inject.Inject
@@ -18,8 +21,37 @@ class UserRemoteDataSource @Inject constructor(
 
     suspend fun registerUser(
         registerRequest: RegisterRequest
-    ): AuthResponse {
+    ): RegistrationPendingResponse {
         return userApi.registerUser(registerRequest)
+    }
+
+    suspend fun verifyRegistrationPhone(
+        phone: String,
+        code: String
+    ): AuthResponse {
+
+        return userApi.verifyRegistrationPhone(
+            VerifyPhoneRequest(
+                phone = phone,
+                code = code
+            )
+        )
+    }
+
+    suspend fun resendRegistrationPhoneCode(
+        phone: String
+    ) {
+        val response =
+            userApi.resendRegistrationPhoneCode(
+                ResendPhoneCodeRequest(
+                    phone = phone
+                )
+            )
+
+        requireStatus(
+            response = response,
+            expectedStatus = 202
+        )
     }
 
     suspend fun loginUser(

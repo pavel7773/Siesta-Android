@@ -58,6 +58,17 @@
     <string name="ui_could_not_start_the_security_update_57">"Не удалось начать обновление защиты"</string>
     <string name="ui_update_security_58">"Обновить защиту"</string>
     <string name="ui_later_59">"Позже"</string>
+    <string name="ui_phone_verification_title">Подтверждение телефона</string>
+    <string name="ui_phone_verification_code_sent">Код отправлен на %1$s. Он действует 10 минут.</string>
+    <string name="ui_phone_verification_code_not_sent">Не удалось отправить код. Нажмите «Отправить код ещё раз».</string>
+    <string name="ui_phone_verification_code">Шестизначный код</string>
+    <string name="ui_phone_verification_verifying">Проверяем...</string>
+    <string name="ui_phone_verification_confirm">Подтвердить номер</string>
+    <string name="ui_phone_verification_resend">Отправить код ещё раз</string>
+    <string name="ui_phone_verification_resend_in">Повторно через %1$d с</string>
+    <string name="ui_enable_quick_sign_in">Хотите включить быстрый вход по отпечатку пальца?</string>
+    <string name="ui_enable">Включить</string>
+    <string name="ui_could_not_enable_quick_sign_in">Не удалось включить быстрый вход</string>
     <string name="ui_order_added_to_your_cart_60">"Заказ добавлен в корзину"</string>
     <string name="ui_some_items_in_this_order_are_no_longer_available_61">"Некоторые блюда из заказа больше недоступны"</string>
     <string name="ui_the_items_in_this_order_are_no_longer_available_62">"Блюда из этого заказа больше недоступны"</string>

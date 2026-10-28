@@ -11,7 +11,8 @@ fun RegisterRoute(
     userViewModel: UserViewModel,
     onBack: () -> Unit,
     onGoLogin: () -> Unit,
-    onRegisterSuccess: () -> Unit
+    onPhoneVerificationRequired:
+        (String, Boolean) -> Unit
 ) {
     val errorMessage by userViewModel.errorMessage.collectAsStateWithLifecycle()
 
@@ -29,7 +30,8 @@ fun RegisterRoute(
                 phone = phone,
                 password = password,
                 passwordRepeat = passwordRepeat,
-                onSuccess = onRegisterSuccess
+                onVerificationRequired =
+                    onPhoneVerificationRequired
             )
         }
     )

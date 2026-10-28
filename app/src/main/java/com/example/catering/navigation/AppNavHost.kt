@@ -6,6 +6,7 @@ import com.example.catering.R
 import android.app.Activity
 import android.content.Context
 import android.content.ContextWrapper
+import android.os.Build
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -21,6 +22,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
@@ -88,6 +90,7 @@ import com.example.catering.ui.routes.MenuRoute
 import com.example.catering.ui.routes.OrderSuccessRoute
 import com.example.catering.ui.routes.OrdersHistoryRoute
 import com.example.catering.ui.routes.PersonalDataRoute
+import com.example.catering.ui.routes.PhoneVerificationRoute
 import com.example.catering.ui.routes.ProfileRoute
 import com.example.catering.ui.routes.RecentlyViewedRoute
 import com.example.catering.ui.routes.RegisterRoute
@@ -142,6 +145,9 @@ fun AppNavHost(
     var pendingBiometricPasswordLogin by remember { mutableStateOf(false) }
     val biometricUpgradeScope = rememberCoroutineScope()
     var showBiometricUpgradeOffer by remember {
+        mutableStateOf(false)
+    }
+    var showBiometricEnableOffer by remember {
         mutableStateOf(false)
     }
     var pendingAuthNavigation by remember {
@@ -204,7 +210,27 @@ fun AppNavHost(
             launchSingleTop = true
         }
     }
+    fun finishPasswordAuth() {
+        navigateFromAuth()
 
+        biometricUpgradeScope.launch {
+            try {
+                if (
+                    userViewModel
+                        .shouldOfferBiometricEnable()
+                ) {
+                    showBiometricEnableOffer = true
+                }
+
+            } catch (e: CancellationException) {
+                throw e
+
+            } catch (e: Exception) {
+                // Если проверка не удалась,
+                // просто не показываем предложение.
+            }
+        }
+    }
     fun navigateWithHomeBackStack(destination: Any) {
         navController.navigate(destination) {
             popUpTo(Home) {
@@ -218,12 +244,6 @@ fun AppNavHost(
         afterAuthDestination = destination
         authBackDestination = backDestination
         navController.navigate(Login)
-    }
-
-    fun openRegisterAfter(destination: Route, backDestination: Route) {
-        afterAuthDestination = destination
-        authBackDestination = backDestination
-        navController.navigate(Register)
     }
 
     fun navigateTo(destination: Any) {
@@ -313,7 +333,6 @@ fun AppNavHost(
 
 
     when {
-
         userViewModel.isSessionRestoring -> {
             LoadingStateContent(
                 message = texts.getString(R.string.ui_checking_your_account_33)
@@ -368,11 +387,12 @@ fun AppNavHost(
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
+                                .navigationBarsPadding()
                                 .padding(
                                     start = 12.dp,
                                     end = 12.dp,
                                     top = 8.dp,
-                                    bottom = 0.dp
+                                    bottom = 6.dp
                                 )
                                 .heightIn(min = 72.dp)
                                 .clip(RoundedCornerShape(24.dp))
@@ -446,7 +466,6 @@ fun AppNavHost(
                                 menuViewModel = menuViewModel,
                                 onGoMenu = { navigateTo(Menu) },
                                 cartViewModel = cartViewModel,
-                                userViewModel = userViewModel,
                                 onGoToCart = { navigateTo(Cart) },
                                 onExitApp = {
                                     (context as? Activity)?.finish()
@@ -580,7 +599,17 @@ fun AppNavHost(
                                         navController.navigate(Login) { popUpTo<Register> { inclusive = true }; launchSingleTop = true }
                                     }
                                 },
-                                onRegisterSuccess = { navigateFromAuth() }
+                                onPhoneVerificationRequired = {
+                                        phone,
+                                        codeSent ->
+
+                                    navigateTo(
+                                        PhoneVerification(
+                                            phone = phone,
+                                            codeSent = codeSent
+                                        )
+                                    )
+                                }
                             )
                         }
 
@@ -589,13 +618,35 @@ fun AppNavHost(
                                 onBack = { navigateBack() },
                                 userViewModel = userViewModel,
                                 noAccount = { navigateTo(Register) },
-                                onLoginSuccess = { navigateFromAuth() },
+                                onLoginSuccess = {
+                                    finishPasswordAuth()
+                                },
                                 onForgotPassword = {
                                     navController.navigate(PasswordRecoveryGraph)
                                 }
                             )
                         }
+                        composable<PhoneVerification> {
+                                backStackEntry ->
 
+                            val route =
+                                backStackEntry
+                                    .toRoute<PhoneVerification>()
+
+                            PhoneVerificationRoute(
+                                phone = route.phone,
+                                codeSent = route.codeSent,
+                                userViewModel = userViewModel,
+
+                                onBack = {
+                                    navigateBack()
+                                },
+
+                                onVerified = {
+                                    finishPasswordAuth()
+                                }
+                            )
+                        }
 
                         navigation<PasswordRecoveryGraph>(
                             startDestination = ForgotPasswordDestination
@@ -955,6 +1006,132 @@ fun AppNavHost(
                 }
             }
         }
+    }
+    if (
+        showBiometricEnableOffer &&
+        !userViewModel.isBiometricEnabled &&
+        !userViewModel.isBiometricUnlockRequired
+    ) {
+        AlertDialog(
+            onDismissRequest = {
+                showBiometricEnableOffer = false
+                userViewModel.dismissBiometricEnableOffer()
+            },
+
+            title = {
+                Text(
+                    text = texts.getString(
+                        R.string.ui_easy_sign_in_to_siesta_50
+                    )
+                )
+            },
+
+            text = {
+                Text(
+                    text = texts.getString(
+                        R.string.ui_enable_quick_sign_in
+                    )
+                )
+            },
+
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showBiometricEnableOffer = false
+
+                        biometricUpgradeScope.launch {
+                            try {
+                                val activity =
+                                    biometricActivityContext
+                                        .findBiometricActivity()
+                                        ?: error(
+                                            "Не найдена FragmentActivity"
+                                        )
+
+                                val cipher =
+                                    userViewModel
+                                        .prepareBiometricEnableCipher()
+
+                                BiometricAuthenticator(activity)
+                                    .authenticate(
+                                        cipher = cipher,
+                                        title = texts.getString(
+                                            R.string.ui_siesta_quick_sign_in_41
+                                        ),
+                                        subtitle =
+                                            if (
+                                                Build.VERSION.SDK_INT >=
+                                                Build.VERSION_CODES.R
+                                            ) {
+                                                texts.getString(
+                                                    R.string.ui_confirm_with_your_fingerprint_or_pin_56
+                                                )
+                                            } else {
+                                                texts.getString(
+                                                    R.string.ui_use_your_fingerprint_to_enable_protection_42
+                                                )
+                                            },
+
+                                        onSuccess = { verifiedCipher ->
+                                            userViewModel
+                                                .completeBiometricEnable(
+                                                    verifiedCipher
+                                                )
+                                        },
+
+                                        onCancelled = {
+                                            // Пользователь просто отменил.
+                                        },
+
+                                        onError = { message ->
+                                            biometricUpgradeScope.launch {
+                                                snackbarHostState
+                                                    .showSnackbar(
+                                                        texts.uiMessage(message)
+                                                    )
+                                            }
+                                        },
+                                        allowDeviceCredential =
+                                            Build.VERSION.SDK_INT >=
+                                                    Build.VERSION_CODES.R
+                                    )
+
+                            } catch (e: CancellationException) {
+                                throw e
+
+                            } catch (e: Exception) {
+                                snackbarHostState.showSnackbar(
+                                    texts.getString(
+                                        R.string.ui_could_not_enable_quick_sign_in
+                                    )
+                                )
+                            }
+                        }
+                    }
+                ) {
+                    Text(
+                        texts.getString(
+                            R.string.ui_enable
+                        )
+                    )
+                }
+            },
+
+            dismissButton = {
+                TextButton(
+                    onClick = {
+                        showBiometricEnableOffer = false
+                        userViewModel.dismissBiometricEnableOffer()
+                    }
+                ) {
+                    Text(
+                        texts.getString(
+                            R.string.ui_later_59
+                        )
+                    )
+                }
+            }
+        )
     }
     if (
         showBiometricUpgradeOffer &&

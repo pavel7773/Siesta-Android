@@ -104,7 +104,7 @@ fun AddressScreen(
             onBack = onBack,
             compact = true,
             centerTitle = false,
-            titleFontSize = 19.sp,
+            titleFontSize = 24.sp,
             modifier = Modifier.padding(
                 horizontal = 16.dp,
                 vertical = 8.dp

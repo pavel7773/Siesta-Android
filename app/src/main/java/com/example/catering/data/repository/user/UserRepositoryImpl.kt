@@ -11,6 +11,7 @@ import com.example.catering.data.remote.user.UserRemoteDataSource
 import com.example.catering.data.remote.UserApiOperation
 import com.example.catering.data.remote.userApiCall
 import com.example.catering.data.session.TokenProvider
+import com.example.catering.domain.model.RegistrationPending
 import com.example.catering.domain.model.User
 import com.example.catering.domain.model.UserException
 import com.example.catering.domain.repository.UserRepository
@@ -48,18 +49,71 @@ class UserRepositoryImpl @Inject constructor(
         userLocalDataSource.saveUser(user)
     }
 
-    override suspend fun registerUser(name: String, phone: String, password: String): User {
-        val register = RegisterRequest(
-            name = name,
-            phone = phone,
-            password = password
+    override suspend fun registerUser(
+        name: String,
+        phone: String,
+        password: String
+    ): RegistrationPending {
+
+        val request =
+            RegisterRequest(
+                name = name,
+                phone = phone,
+                password = password
+            )
+
+        val response =
+            userApiCall(
+                UserApiOperation.REGISTER
+            ) {
+                userRemoteDataSource
+                    .registerUser(request)
+            }
+
+        return RegistrationPending(
+            phone = response.phone,
+            codeSent = response.codeSent
         )
-        val authResponse = userApiCall(UserApiOperation.REGISTER) {
-            userRemoteDataSource.registerUser(register)
+    }
+
+    override suspend fun verifyRegistrationPhone(
+        phone: String,
+        code: String
+    ): User {
+
+        val authResponse =
+            userApiCall(
+                UserApiOperation.VERIFY_PHONE
+            ) {
+                userRemoteDataSource
+                    .verifyRegistrationPhone(
+                        phone = phone,
+                        code = code
+                    )
+            }
+
+        tokenLocalDataSource.saveToken(
+            token = authResponse.token
+        )
+
+        tokenProvider.setToken(
+            newToken = authResponse.token
+        )
+
+        return userMapper.toUser(
+            authResponse.userResponse
+        )
+    }
+
+    override suspend fun resendRegistrationPhoneCode(
+        phone: String
+    ) {
+        userApiCall(
+            UserApiOperation.RESEND_PHONE
+        ) {
+            userRemoteDataSource
+                .resendRegistrationPhoneCode(phone)
         }
-        tokenLocalDataSource.saveToken(token = authResponse.token)
-        tokenProvider.setToken(newToken = authResponse.token)
-        return userMapper.toUser(authResponse.userResponse)
     }
 
     override suspend fun restoreUser(): User? {

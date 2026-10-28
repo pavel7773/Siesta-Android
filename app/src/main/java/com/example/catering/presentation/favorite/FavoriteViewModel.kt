@@ -21,24 +21,6 @@ class FavoriteViewModel @Inject constructor(
 ) : ViewModel() {
     val favoriteDishIdsState = getFavoriteDishIdsUseCase.execute()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
-    val favoriteBadgeState: StateFlow<FavoriteBadgeState> =
-        favoriteDishIdsState
-            .map { ids ->
-                val count = ids.size
-                FavoriteBadgeState(
-                    count = count,
-                    text = if (count <= 99) count.toString() else "99+"
-                )
-            }
-            .stateIn(
-                viewModelScope,
-                SharingStarted.WhileSubscribed(5000),
-                FavoriteBadgeState(
-                    count = 0,
-                    text = "0"
-                )
-            )
-
     fun toggleFavorite(dishId: Int, isCurrentlyFavorite: Boolean) {
         viewModelScope.launch {
             if (isCurrentlyFavorite) {

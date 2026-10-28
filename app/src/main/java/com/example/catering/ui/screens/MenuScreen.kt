@@ -144,7 +144,9 @@ fun MenuScreen(
 
     var showFilters by rememberSaveable { mutableStateOf(false) }
     androidx.compose.runtime.LaunchedEffect(openFiltersRequested) {
-        if (openFiltersRequested) { showFilters = true; onFiltersRequestConsumed() }
+        if (openFiltersRequested) {
+            showFilters = true; onFiltersRequestConsumed()
+        }
     }
     val focusManager = LocalFocusManager.current
     val openFilters = {
@@ -190,6 +192,7 @@ fun MenuScreen(
                     onBack()
                 }
             },
+            titleFontSize = 24.sp,
             compact = true,
             centerTitle = true,
             modifier = Modifier.padding(
@@ -215,9 +218,18 @@ fun MenuScreen(
                         .padding(20.dp),
                     verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
-                    ErrorStateContent(texts.getString(R.string.ui_could_not_load_the_menu_334), texts.getString(R.string.ui_check_your_connection_then_try_again_335),
-                        buttonText = texts.getString(R.string.ui_retry_141), onButtonClick = onRetry, contentPadding = 0.dp)
-                    if (onGoSupport != null) SiestaButton(texts.getString(R.string.ui_contact_the_restaurant_336), onGoSupport, secondary = true)
+                    ErrorStateContent(
+                        texts.getString(R.string.ui_could_not_load_the_menu_334),
+                        texts.getString(R.string.ui_check_your_connection_then_try_again_335),
+                        buttonText = texts.getString(R.string.ui_retry_141),
+                        onButtonClick = onRetry,
+                        contentPadding = 0.dp
+                    )
+                    if (onGoSupport != null) SiestaButton(
+                        texts.getString(R.string.ui_contact_the_restaurant_336),
+                        onGoSupport,
+                        secondary = true
+                    )
                 }
 
                 is MenuUiState.Success -> {
@@ -290,7 +302,10 @@ fun MenuScreen(
                                     item(key = "cache") {
                                         MenuNotice(
                                             texts.getString(R.string.ui_showing_saved_menu_340),
-                                            texts.getString(R.string.ui_prices_may_change_updated_341, texts.uiMessage(formatMenuUpdatedAt(menuUiState.lastUpdatedAtMillis)))
+                                            texts.getString(
+                                                R.string.ui_prices_may_change_updated_341,
+                                                texts.uiMessage(formatMenuUpdatedAt(menuUiState.lastUpdatedAtMillis))
+                                            )
                                         )
                                     }
                                 }
@@ -299,7 +314,9 @@ fun MenuScreen(
                                         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                                             MenuNotice(texts.uiMessage(message))
                                             MenuAction(
-                                                if (menuUiState.isRefreshing) texts.getString(R.string.ui_refreshing_menu_342) else texts.getString(R.string.ui_refresh_menu_343),
+                                                if (menuUiState.isRefreshing) texts.getString(R.string.ui_refreshing_menu_342) else texts.getString(
+                                                    R.string.ui_refresh_menu_343
+                                                ),
                                                 onRefresh,
                                                 Modifier.fillMaxWidth(),
                                                 enabled = !menuUiState.isRefreshing
@@ -326,7 +343,10 @@ fun MenuScreen(
                                         val hasFilters = activeFiltersCount > 0
                                         MenuNotice(
                                             when {
-                                                searchQuery.isNotBlank() && hasFilters -> texts.getString(R.string.ui_no_matches_for_this_search_and_filters_346)
+                                                searchQuery.isNotBlank() && hasFilters -> texts.getString(
+                                                    R.string.ui_no_matches_for_this_search_and_filters_346
+                                                )
+
                                                 searchQuery.isNotBlank() -> texts.getString(R.string.ui_no_matches_for_this_search_347)
                                                 hasFilters -> texts.getString(R.string.ui_no_matches_for_these_filters_348)
                                                 else -> texts.getString(R.string.ui_the_menu_is_empty_for_now_349)
@@ -430,7 +450,10 @@ private fun MenuSearch(
                 .padding(horizontal = 12.dp, vertical = 12.dp),
             decorationBox = { innerTextField ->
                 Box {
-                    if (query.isEmpty()) Text(texts.getString(R.string.ui_find_a_dish_355), style = MenuBody)
+                    if (query.isEmpty()) Text(
+                        texts.getString(R.string.ui_find_a_dish_355),
+                        style = MenuBody
+                    )
                     innerTextField()
                 }
             }

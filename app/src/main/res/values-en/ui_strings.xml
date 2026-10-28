@@ -15,6 +15,17 @@
     <string name="ui_enter_your_name_14">"Enter your name"</string>
     <string name="ui_enter_a_valid_phone_number_15">"Enter a valid phone number"</string>
     <string name="ui_delivery_16">"Delivery"</string>
+    <string name="ui_enable_quick_sign_in">Would you like to enable quick sign-in with your fingerprint?</string>
+    <string name="ui_enable">Enable</string>
+    <string name="ui_could_not_enable_quick_sign_in">Could not enable quick sign-in</string>
+    <string name="ui_phone_verification_title">Phone verification</string>
+    <string name="ui_phone_verification_code_sent">A code was sent to %1$s. It is valid for 10 minutes.</string>
+    <string name="ui_phone_verification_code_not_sent">The code could not be sent. Tap “Send code again”.</string>
+    <string name="ui_phone_verification_code">Six-digit code</string>
+    <string name="ui_phone_verification_verifying">Verifying...</string>
+    <string name="ui_phone_verification_confirm">Verify phone number</string>
+    <string name="ui_phone_verification_resend">Send code again</string>
+    <string name="ui_phone_verification_resend_in">Resend in %1$d s</string>
     <string name="ui_enter_your_delivery_address_17">"Enter your delivery address"</string>
     <string name="ui_invalid_order_total_18">"Invalid order total"</string>
     <string name="ui_enter_a_valid_email_address_19">"Enter a valid email address"</string>

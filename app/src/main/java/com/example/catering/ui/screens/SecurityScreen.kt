@@ -100,7 +100,7 @@ fun SecurityScreen(
             title = texts.getString(R.string.ui_security_424),
             onBack = onBack,
             compact = true,
-            titleFontSize = 19.sp,
+            titleFontSize = 24.sp,
             modifier = Modifier.padding(
                 horizontal = 18.dp,
                 vertical = 8.dp

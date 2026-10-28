@@ -33,13 +33,6 @@ class PasswordRecoveryViewModel @Inject constructor(
     private val _resendSeconds = MutableStateFlow(0)
     val resendSeconds = _resendSeconds.asStateFlow()
 
-    fun changeEmail() {
-        if (isBusy()) return
-        savedStateHandle["recovery_email"] = null
-        clearRequestCodeStatus()
-        clearResetPasswordStatus()
-    }
-
     private val _requestCodeStatus =
         MutableStateFlow<PasswordRecoveryStatus>(
             PasswordRecoveryStatus.Idle
@@ -187,15 +180,6 @@ class PasswordRecoveryViewModel @Inject constructor(
             PasswordRecoveryStatus.Loading
         ) {
             _requestCodeStatus.value =
-                PasswordRecoveryStatus.Idle
-        }
-    }
-
-    fun clearResetPasswordStatus() {
-        if (_resetPasswordStatus.value !=
-            PasswordRecoveryStatus.Loading
-        ) {
-            _resetPasswordStatus.value =
                 PasswordRecoveryStatus.Idle
         }
     }

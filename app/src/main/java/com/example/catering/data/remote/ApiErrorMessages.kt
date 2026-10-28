@@ -5,7 +5,13 @@ import kotlinx.coroutines.CancellationException
 import retrofit2.HttpException
 import java.io.IOException
 
-internal enum class UserApiOperation { LOGIN, REGISTER, PROFILE }
+internal enum class UserApiOperation {
+    LOGIN,
+    REGISTER,
+    PROFILE,
+    VERIFY_PHONE,
+    RESEND_PHONE
+}
 
 /** Raw server bodies and exception messages must never become UI text. */
 internal object ApiErrorMessages {
@@ -75,17 +81,40 @@ internal suspend fun <T> userApiCall(operation: UserApiOperation, request: suspe
                 UserApiOperation.REGISTER -> ApiErrorMessages.validation(
                     e, ApiErrorMessages.registration, "Проверьте имя, номер телефона и пароль"
                 )
+
                 UserApiOperation.PROFILE -> ApiErrorMessages.validation(
                     e, ApiErrorMessages.profile, "Проверьте данные профиля"
                 )
+                UserApiOperation.VERIFY_PHONE ->
+                    "Неверный или истёкший код"
+
+                UserApiOperation.RESEND_PHONE ->
+                    "Не удалось отправить код"
             }
+
             401 -> if (operation == UserApiOperation.LOGIN) "Неверный телефон или пароль"
-                else "Не удалось зарегистрироваться. Попробуйте позже"
-            403 -> ApiErrorMessages.FORBIDDEN
+            else "Не удалось зарегистрироваться. Попробуйте позже"
+
+            403 -> when (operation) {
+                UserApiOperation.LOGIN ->
+                    "Подтвердите номер телефона"
+
+                else ->
+                    ApiErrorMessages.FORBIDDEN
+            }
             408, 504 -> "Сервер не ответил вовремя. Попробуйте ещё раз"
-            409 -> if (operation == UserApiOperation.REGISTER)
-                "Этот номер уже зарегистрирован. Войдите или восстановите пароль"
-                else "Данные изменились. Обновите экран и попробуйте снова"
+            409 -> when (operation) {
+
+                UserApiOperation.REGISTER ->
+                    "Этот номер уже зарегистрирован"
+
+                UserApiOperation.RESEND_PHONE ->
+                    "Номер уже подтверждён"
+
+                else ->
+                    "Данные изменились. Попробуйте снова"
+            }
+
             429 -> ApiErrorMessages.RATE_LIMIT
             in 500..599 -> ApiErrorMessages.UNAVAILABLE
             else -> "Не удалось выполнить действие. Попробуйте позже"

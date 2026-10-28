@@ -57,27 +57,45 @@ private val FormText = SiestaTextPrimary
 
 @Composable
 fun AccountForm(title: String, onBack: () -> Unit, content: @Composable ColumnScope.() -> Unit) {
-    Column(Modifier.fillMaxSize().background(Brush.verticalGradient(
-        listOf(SiestaBgTop, SiestaBgMiddle, SiestaBgBottom)
-    )).imePadding()) {
-        ScreenHeader(title, onBack, compact = true, titleFontSize = 19.sp,
-            modifier = Modifier.padding(horizontal = 18.dp, vertical = 8.dp))
-        Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(20.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp), content = content)
+    Column(
+        Modifier
+            .fillMaxSize()
+            .background(
+                Brush.verticalGradient(
+                    listOf(SiestaBgTop, SiestaBgMiddle, SiestaBgBottom)
+                )
+            )
+            .imePadding()
+    ) {
+        ScreenHeader(
+            title, onBack, compact = true, titleFontSize = 24.sp,
+            modifier = Modifier.padding(horizontal = 18.dp, vertical = 8.dp)
+        )
+        Column(
+            Modifier
+                .weight(1f)
+                .verticalScroll(rememberScrollState())
+                .padding(20.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp), content = content
+        )
     }
 }
 
 @Composable
 fun AccountCopy(text: String, error: Boolean = false) {
-    Text(text, fontFamily = SiestaManrope, fontSize = 14.sp, lineHeight = 21.sp,
-        color = if (error) SiestaError else FormText)
+    Text(
+        text, fontFamily = SiestaManrope, fontSize = 14.sp, lineHeight = 21.sp,
+        color = if (error) SiestaError else FormText
+    )
 }
 
 @Composable
-fun AccountField(value: String, onChange: (String) -> Unit, label: String,
-                 enabled: Boolean = true, keyboard: KeyboardType = KeyboardType.Text,
-                 password: Boolean = false, externalLabel: Boolean = false,
-                 isError: Boolean = false) {
+fun AccountField(
+    value: String, onChange: (String) -> Unit, label: String,
+    enabled: Boolean = true, keyboard: KeyboardType = KeyboardType.Text,
+    password: Boolean = false, externalLabel: Boolean = false,
+    isError: Boolean = false
+) {
     val texts = androidx.compose.ui.platform.LocalContext.current.resources
 
     var visible by remember { mutableStateOf(false) }
@@ -85,35 +103,76 @@ fun AccountField(value: String, onChange: (String) -> Unit, label: String,
         Text(label, fontFamily = SiestaManrope, fontSize = 13.sp, color = SiestaNavUnselected)
         Spacer(Modifier.height(6.dp))
     }
-    OutlinedTextField(value, onChange, modifier = Modifier.fillMaxWidth()
-        .semantics { if (externalLabel) contentDescription = label }.background(
-            Brush.verticalGradient(listOf(SiestaSearchTop, SiestaSearchMiddle, com.example.catering.ui.theme.SiestaSearchBottom)), RoundedCornerShape(20.dp)), enabled = enabled,
+    OutlinedTextField(
+        value, onChange, modifier = Modifier
+            .fillMaxWidth()
+            .semantics { if (externalLabel) contentDescription = label }
+            .background(
+                Brush.verticalGradient(
+                    listOf(
+                        SiestaSearchTop,
+                        SiestaSearchMiddle,
+                        com.example.catering.ui.theme.SiestaSearchBottom
+                    )
+                ), RoundedCornerShape(20.dp)
+            ), enabled = enabled,
         isError = isError,
-        singleLine = true, label = if (externalLabel) null else { { Text(label, fontFamily = SiestaManrope) } },
+        singleLine = true, label = if (externalLabel) null else {
+            { Text(label, fontFamily = SiestaManrope) }
+        },
         keyboardOptions = KeyboardOptions(keyboardType = keyboard),
         visualTransformation = if (password && !visible) PasswordVisualTransformation() else VisualTransformation.None,
-        trailingIcon = if (password) { { TextButton(onClick = { visible = !visible }, enabled = enabled) {
-            Text(if (visible) texts.getString(R.string.ui_hide_114) else texts.getString(R.string.ui_show_115), color = FormGold)
-        } } } else null,
+        trailingIcon = if (password) {
+            {
+                TextButton(onClick = { visible = !visible }, enabled = enabled) {
+                    Text(
+                        if (visible) texts.getString(R.string.ui_hide_114) else texts.getString(R.string.ui_show_115),
+                        color = FormGold
+                    )
+                }
+            }
+        } else null,
         shape = RoundedCornerShape(20.dp),
-        textStyle = androidx.compose.ui.text.TextStyle(fontFamily = SiestaManrope, fontSize = 16.sp),
+        textStyle = androidx.compose.ui.text.TextStyle(
+            fontFamily = SiestaManrope,
+            fontSize = 16.sp
+        ),
         colors = OutlinedTextFieldDefaults.colors(
-            focusedTextColor = FormText, unfocusedTextColor = FormText, disabledTextColor = FormText,
-            focusedContainerColor = Color.Transparent, unfocusedContainerColor = Color.Transparent,
-            disabledContainerColor = Color.Transparent, errorContainerColor = Color.Transparent,
-            errorBorderColor = SiestaError, errorTextColor = FormText,
-            focusedBorderColor = FormGold, unfocusedBorderColor = SiestaNavOutline,
-            focusedLabelColor = FormGold, unfocusedLabelColor = SiestaNavUnselected, cursorColor = FormGold))
+            focusedTextColor = FormText,
+            unfocusedTextColor = FormText,
+            disabledTextColor = FormText,
+            focusedContainerColor = Color.Transparent,
+            unfocusedContainerColor = Color.Transparent,
+            disabledContainerColor = Color.Transparent,
+            errorContainerColor = Color.Transparent,
+            errorBorderColor = SiestaError,
+            errorTextColor = FormText,
+            focusedBorderColor = FormGold,
+            unfocusedBorderColor = SiestaNavOutline,
+            focusedLabelColor = FormGold,
+            unfocusedLabelColor = SiestaNavUnselected,
+            cursorColor = FormGold
+        ))
 }
 
 @Composable
-fun AccountAction(text: String, enabled: Boolean = true, secondary: Boolean = false, onClick: () -> Unit) {
-    Button(onClick, modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp), enabled = enabled,
+fun AccountAction(
+    text: String,
+    enabled: Boolean = true,
+    secondary: Boolean = false,
+    onClick: () -> Unit
+) {
+    Button(
+        onClick, modifier = Modifier
+            .fillMaxWidth()
+            .heightIn(min = 52.dp), enabled = enabled,
         shape = RoundedCornerShape(26.dp),
         colors = ButtonDefaults.buttonColors(
             containerColor = if (secondary) SiestaSearchTop else FormGold,
             contentColor = if (secondary) FormText else SiestaBackgroundDark,
-            disabledContainerColor = SiestaNavOutline, disabledContentColor = SiestaNavUnselected)) {
+            disabledContainerColor = SiestaNavOutline, disabledContentColor = SiestaNavUnselected
+        )
+    ) {
         Text(text, fontFamily = SiestaManrope, fontSize = 14.sp)
     }
 }
