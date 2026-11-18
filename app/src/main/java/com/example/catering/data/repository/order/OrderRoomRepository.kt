@@ -1,11 +1,13 @@
 package com.example.catering.data.repository.order
 
 import com.example.catering.data.local.order.OrderLocalDataSource
+import com.example.catering.data.local.user.UserLocalDataSource
 import com.example.catering.data.remote.dto.order.CreateOrderItemRequest
 import com.example.catering.data.remote.dto.order.CreateOrderRequest
 import com.example.catering.data.remote.dto.order.OrderResponse
 import com.example.catering.data.remote.order.OrderRemoteDataSource
 import com.example.catering.data.remote.ApiErrorMessages
+import com.example.catering.domain.demo.DemoData
 import com.example.catering.domain.model.CartItem
 import com.example.catering.domain.model.Dish
 import com.example.catering.domain.model.Order
@@ -20,7 +22,8 @@ import javax.inject.Inject
 
 class OrderRoomRepository @Inject constructor(
     private val orderLocalDataSource: OrderLocalDataSource,
-    private val orderRemoteDataSource: OrderRemoteDataSource
+    private val orderRemoteDataSource: OrderRemoteDataSource,
+    private val userLocalDataSource: UserLocalDataSource
 ) : OrderRepository {
     override fun getAllOrdersFlow(): Flow<List<Order>> {
         return orderLocalDataSource.getAllOrdersFlow()
@@ -31,6 +34,16 @@ class OrderRoomRepository @Inject constructor(
         idempotencyKey: String,
         promoCode: String?
     ): Order {
+
+        if (isDemoUser()) {
+            val demoOrder = order.copy(
+                id = (System.currentTimeMillis() % 2_000_000_000L).toInt(),
+                createdAt = System.currentTimeMillis(),
+                statusOrder = OrderStatus.ACCEPTED
+            )
+            orderLocalDataSource.saveOrder(demoOrder)
+            return demoOrder
+        }
 
         val request = CreateOrderRequest(
             orderItems = order.products.map { cartItem ->
@@ -70,6 +83,14 @@ class OrderRoomRepository @Inject constructor(
     }
 
     override suspend fun cancelOrder(orderId: Int) {
+        if (isDemoUser()) {
+            orderLocalDataSource.updateOrderStatus(
+                orderId,
+                OrderStatus.CANCELED.name
+            )
+            return
+        }
+
         try {
 
             val response =
@@ -93,6 +114,10 @@ class OrderRoomRepository @Inject constructor(
     }
 
     override suspend fun refreshOrders() {
+        if (isDemoUser()) {
+            return
+        }
+
         try {
             val responses = orderRemoteDataSource.getOrders()
             val orders = responses.map { response ->
@@ -197,6 +222,10 @@ class OrderRoomRepository @Inject constructor(
             }
         }
     }
+    private suspend fun isDemoUser(): Boolean {
+        return userLocalDataSource.restoreUser()?.id == DemoData.USER_ID
+    }
+
     override suspend fun clearLocalOrders() {
         orderLocalDataSource.clearOrderHistory()
     }
