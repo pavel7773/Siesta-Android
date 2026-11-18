@@ -1,6 +1,7 @@
 package com.example.catering.ui.routes
 
 import com.example.catering.R
+import com.example.catering.domain.demo.DemoData
 
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
@@ -53,6 +54,8 @@ fun CheckoutRoute(
         else -> null
     }
     val currentUser = userViewModel.currentUser
+    val effectiveOnline =
+        isOnline || currentUser?.id == DemoData.USER_ID
 
     val cartItemsViewModel: CartItemsViewModel = hiltViewModel()
 
@@ -104,7 +107,7 @@ fun CheckoutRoute(
                 totalPrice = 0,
                 onBack = onBack,
                 onConfirmOrder = confirmOrder@{ order ->
-                    if (!isOnline) return@confirmOrder
+                    if (!effectiveOnline) return@confirmOrder
                     if (isOrderSaving) return@confirmOrder
                     if (currentUser == null) {
                         onGoLogin()
@@ -137,7 +140,7 @@ fun CheckoutRoute(
                 onCommentChange = { checkoutViewModel.updateComment(it) },
                 onPromoCodeChange = { checkoutViewModel.updatePromoCode(it) },
                 onApplyPromoCode = { checkoutViewModel.applyPromoCode(0) },
-                isOnline = isOnline
+                isOnline = effectiveOnline
 
             )
         }
@@ -170,7 +173,7 @@ fun CheckoutRoute(
                 totalPrice = totalPrice,
                 onBack = onBack,
                 onConfirmOrder = confirmOrder@{ order ->
-                    if (!isOnline) return@confirmOrder
+                    if (!effectiveOnline) return@confirmOrder
                     if (isOrderSaving) return@confirmOrder
                     if (currentUser == null) {
                         onGoLogin()
@@ -203,7 +206,7 @@ fun CheckoutRoute(
                 onCommentChange = { checkoutViewModel.updateComment(it) },
                 onPromoCodeChange = { checkoutViewModel.updatePromoCode(it) },
                 onApplyPromoCode = { checkoutViewModel.applyPromoCode(totalPrice) },
-                isOnline = isOnline
+                isOnline = effectiveOnline
 
             )
         }
