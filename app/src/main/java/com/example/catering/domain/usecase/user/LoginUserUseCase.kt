@@ -1,5 +1,6 @@
 package com.example.catering.domain.usecase.user
 
+import com.example.catering.domain.demo.DemoData
 import com.example.catering.domain.model.User
 import com.example.catering.domain.model.UserException
 import com.example.catering.domain.repository.UserRepository
@@ -14,12 +15,23 @@ sealed interface LoginUserResult {
 class LoginUserUseCase @Inject constructor(private val userRepository: UserRepository) {
 
     suspend fun execute(phone: String, password: String): LoginUserResult {
-        if (phone.trim().isBlank() || phone.trim().length < 10) {
+        val normalizedPhone = phone.filter { it.isDigit() }
+
+        if (normalizedPhone.isBlank() || normalizedPhone.length < 10) {
             return LoginUserResult.Error("Введите корректный номер телефона")
         }
 
         if (password.length < 6) {
             return LoginUserResult.Error("Введите пароль больше 6 символов")
+        }
+
+        if (normalizedPhone == DemoData.PHONE) {
+            if (password != DemoData.PASSWORD) {
+                return LoginUserResult.Error("Неверный телефон или пароль")
+            }
+
+            userRepository.saveUser(DemoData.user)
+            return LoginUserResult.Success(DemoData.user)
         }
 
         return try {
