@@ -1,5 +1,6 @@
 package com.example.catering.data.repository.menu
 
+import android.util.Log
 import com.example.catering.data.local.menu.MenuLocalDataSource
 import com.example.catering.data.remote.menu.MenuRemoteDataSource
 import com.example.catering.domain.model.Dish
@@ -7,8 +8,6 @@ import com.example.catering.domain.model.MenuDataSourceType
 import com.example.catering.domain.model.MenuLoadResult
 import com.example.catering.domain.repository.MenuRepository
 import kotlinx.coroutines.CancellationException
-
-
 import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 
@@ -21,15 +20,26 @@ class MenuRepositoryImpl @Inject constructor(
     override suspend fun getMenu(): MenuLoadResult {
 
         try {
+            Log.d("MENU_DEBUG", "Requesting /menu from backend")
+
             val menu = menuRemoteDataSource.getMenu()
+
+            Log.d(
+                "MENU_DEBUG",
+                "Backend returned ${menu.size} dishes"
+            )
 
             val updatedAtMillis = System.currentTimeMillis()
 
             if (menu.isNotEmpty()) {
+                Log.d("MENU_DEBUG", "Saving menu to Room cache")
+
                 menuLocalDataSource.replaceMenuDishes(
                     menu,
                     updatedAtMillis = updatedAtMillis
                 )
+
+                Log.d("MENU_DEBUG", "Menu saved to Room cache")
             }
 
             return MenuLoadResult(
@@ -40,12 +50,15 @@ class MenuRepositoryImpl @Inject constructor(
 
         } catch (e: CancellationException) {
 
-            // CancellationException означает отмену coroutine.
-            // При отмене нельзя переходить на cache и делать вид,
-            // что операция успешно продолжилась.
             throw e
 
         } catch (e: Exception) {
+
+            Log.e(
+                "MENU_DEBUG",
+                "Menu refresh failed: ${e.javaClass.name}: ${e.message}",
+                e
+            )
 
             val cachedMenu =
                 menuLocalDataSource.getMenuDishes()
@@ -98,15 +111,12 @@ class MenuRepositoryImpl @Inject constructor(
                 cachedDishesById.containsKey(id)
             }
 
-        // Используем cache только если он содержит
-        // ВСЕ запрошенные блюда.
         if (hasAllRequestedDishes) {
             return dishIds.mapNotNull { id ->
                 cachedDishesById[id]
             }
         }
 
-        // Если cache неполный — получаем актуальное меню.
         val dishesById =
             getMenu()
                 .dishes
