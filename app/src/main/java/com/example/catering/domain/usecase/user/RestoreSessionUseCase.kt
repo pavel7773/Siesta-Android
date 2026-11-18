@@ -1,5 +1,6 @@
 package com.example.catering.domain.usecase.user
 
+import com.example.catering.domain.demo.DemoData
 import com.example.catering.domain.model.User
 import com.example.catering.domain.model.UserException
 import com.example.catering.domain.repository.UserRepository
@@ -18,6 +19,14 @@ class RestoreSessionUseCase @Inject constructor(private val userRepository: User
 
     suspend fun execute(): RestoreSessionResult {
         return try {
+            val savedUser = userRepository.restoreUser()
+
+            if (savedUser?.id == DemoData.USER_ID) {
+                return RestoreSessionResult.Success(
+                    currentUser = savedUser
+                )
+            }
+
             val token = userRepository.getToken()
             if (token == null) {
                 return RestoreSessionResult.Success(
@@ -45,10 +54,10 @@ class RestoreSessionUseCase @Inject constructor(private val userRepository: User
 
             } catch (e: UserException.Network) {
 
-                val savedUser = userRepository.restoreUser()
+                val offlineUser = userRepository.restoreUser()
 
                 RestoreSessionResult.Success(
-                    currentUser = savedUser
+                    currentUser = offlineUser
                 )
 
             }
