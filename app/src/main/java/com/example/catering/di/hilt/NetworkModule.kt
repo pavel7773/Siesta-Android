@@ -16,7 +16,7 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 object NetworkModule {
-    private const val BACKEND_BASE_URL = "https://cateringbackend-production-13ea.up.railway.app/"
+    private const val BACKEND_BASE_URL = "https://tomato-acting-friendly-strategic.trycloudflare.com/"
 
     @Provides
     @Singleton
