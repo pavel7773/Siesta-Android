@@ -1,5 +1,6 @@
 package com.example.catering.domain.usecase.user
 
+import com.example.catering.data.local.menu.MenuLocalDataSource
 import com.example.catering.domain.demo.DemoData
 import com.example.catering.domain.model.User
 import com.example.catering.domain.model.UserException
@@ -12,7 +13,10 @@ sealed interface LoginUserResult {
     data class Error(val message: String) : LoginUserResult
 }
 
-class LoginUserUseCase @Inject constructor(private val userRepository: UserRepository) {
+class LoginUserUseCase @Inject constructor(
+    private val userRepository: UserRepository,
+    private val menuLocalDataSource: MenuLocalDataSource
+) {
 
     suspend fun execute(phone: String, password: String): LoginUserResult {
         val normalizedPhone = phone.filter { it.isDigit() }
@@ -31,6 +35,13 @@ class LoginUserUseCase @Inject constructor(private val userRepository: UserRepos
             }
 
             userRepository.saveUser(DemoData.user)
+
+            val now = System.currentTimeMillis()
+            menuLocalDataSource.replaceMenuDishes(
+                dishes = DemoData.menu(),
+                updatedAtMillis = now
+            )
+
             return LoginUserResult.Success(DemoData.user)
         }
 
